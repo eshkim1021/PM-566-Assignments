@@ -1,0 +1,45 @@
+---
+title: "Assignment 2"
+author: "Edward Kim"
+date: "9/20/2020"
+output: github_document 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,message = FALSE, include = FALSE}
+library(tidyverse)
+library(dplyr)
+library(data.table)
+library(readr)
+```
+
+```{r}
+download.file("https://raw.githubusercontent.com/USCbiostats/data-science-data/master/01_chs/chs_individual.csv", destfile= "individual.csv")
+download.file("https://raw.githubusercontent.com/USCbiostats/data-science-data/master/01_chs/chs_regional.csv", destfile = "regional.csv")
+
+individual <- data.table::fread("individual.csv")
+regional <- data.table::fread("regional.csv")
+
+```
+
+# 1. Merge the two data sets 
+
+
+```{r}
+
+merge <-merge(
+  x = individual,
+  y = regional,
+  by.x = "townname",
+  by.y = "townname",
+  all.x = TRUE,
+  all.y = TRUE)
+
+head(merge)
+merge %>% nrow()
+```
+
+The two dataset for the individual and regional levels were merged using the location (townname). There is a total of 1200 rows, which confirms that there was no duplicates in the data. There is 49 nine total variables, which is consistent with the variables present in both datasets. 
