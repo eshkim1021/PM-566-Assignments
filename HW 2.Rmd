@@ -3,6 +3,10 @@ title: "Assignment 2"
 author: "Edward Kim"
 date: "9/20/2020"
 output: github_document 
+always_allow_html: true
+editor_options: 
+  
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -117,10 +121,12 @@ merge %>% group_by(smoke_gas_exposure) %>%
 
 
 Q1: What is the association between BMI and FEV?
+
 Q2: What is the association between smoke and gas exposure and FEV? 
+
 Q3: What is the assoication between PM2.5 exposure and FEV? 
 
-Initial EDA Checklist:
+### Initial EDA Checklist:
 
 ```{r}
 dim(merge)
@@ -152,18 +158,99 @@ merge %>%
 
 ```
 
-## 2. Stacked Histograms of FEV by BMI and FEV by smoke/gas exposure
+In all of the different towns, there is a positive relationship between BMI and FEV. Judging by the regression line, the correlation between BMI and FEV is highest in the cities of San Dimas, Lake Elsinore, and Atascadero. 
 
-```{r, fig.height =7,fig.width = 9}
+## 2. Stacked Histograms of FEV by BMI Category and FEV by smoke/gas exposure
+
+```{r, fig.height =5,fig.width = 7}
 merge %>%
   filter(!(townname %in% NA)) %>% 
   ggplot()+
   geom_histogram(mapping = aes(x=fev,fill=obesity_level))+
+  labs(title = "FEV Values by BMI Category")+
   scale_fill_brewer(palette="Pastel1")
+```
 
+Overall, those that are underweight have lower FEV values and those that are overweight and obese have higher FEV values. Those that have a normal BMI are found to have a wide range of FEV values, therefore there is another factor that is causing the differences in FEV. 
+
+```{r, fig.height = 7, fig.width=9}
 merge %>% 
   filter(!(townname %in% NA)) %>% 
   ggplot()+
   geom_histogram(mapping = aes(x = fev,fill=smoke_gas_exposure))+
+  labs(title= "FEV Values by Smoke and Gas Exposure")+
   scale_fill_brewer(palette = "Pastel2")
 ```
+
+The spread of FEV values by Smoke and Gas Exposure seems to be fairly even across the four categories. Those that have only been exposed to second-hand smoke have FEV values that are centralized, but this could be due to the small sample size of this category. 
+
+## 3. Barchart of BMI by Smoke/Gas Exposure 
+
+```{r, fig.height = 5, fig.width = 7}
+merge %>% 
+  ggplot()+
+  geom_bar(mapping = aes(x = obesity_level, fill = smoke_gas_exposure))+
+  labs(title = "BMI Category by Smoke and Gas Exposure")+
+  scale_fill_brewer(palette = "Accent")
+```
+
+Overall, the barchart shows that a majority of those with normal BMI have been exposed to gas exposure. This trend is true for the rest of the BMI categories as well, but this could be due to the large proportion of those that have been exposed to gas compared to the rest of the population. 
+
+## 4. Statistical Summary Graphs 
+
+```{r}
+merge %>% 
+  ggplot()+
+  stat_summary(mapping = aes(x = obesity_level, y = fev),
+               fun.min = min,
+               fun.max = max,
+               fun = mean)+
+  labs(title = "Average FEV values by BMI Category")
+
+```
+
+The summary graphs show the mean FEV values based on obesity values, while also indicating the minimum and maximum values for each category. According to this graph, the mean FEV values are the biggest for those that are obese and overweight, while the mean FEV value is the smallest for those that are underweight. There is not much different in the mean FEV between those who are obese and overweight, but the range of FEV values for those who are overweight is smaller. 
+
+## 5. Leaflet Map for PM2.5 Concentration
+```{r}
+library(leaflet)
+
+pm2.5col = colorNumeric(c('darkgreen','goldenrod','brown'), domain = merge$pm25_mass)
+merge %>% 
+  leaflet() %>% 
+  addProviderTiles('CartoDB.Positron') %>% 
+  addCircles(lat = ~lat, lng = ~lon, label=~paste0(round(pm25_mass,2)), color = ~pm2.5col(pm25_mass), opacity = 1, fillOpacity = 1, radius = 500) %>% 
+  addLegend('bottomleft',pal = pm2.5col, values = merge$pm25_mass, title = 'PM 2.5 Concentration', opacity =1)
+```
+
+According to the leaflet map, the locations with the highest PM 2.5 Concentration is located in or next to cities. The highest PM 2.5 concentrations were recorded near Riverside, Pasadena, and Long BEach. The lowest PM 2.5 concentrations were recorded in ares that are far away from big cities, such as San Luis Obispo, Lancaster, and  San Diego. 
+
+## 6. Is PM 2.5 Related to FEV?
+
+```{r}
+merge %>% 
+  ggplot(mapping = aes(x = pm25_mass,y = fev))+
+  geom_point()+
+  geom_smooth()
+```
+
+Overall, there seems to be a slight negative relationship between PM 2.5 concentration and FEV. However, due to the scatter of data in FEV is it difficult to determine the exact relationship between the two. 
+
+Therefore, the average FEV value for each town (which was recorded to have the same PM 2.5 concentration) were calculated and the relationship between PM2.5 and FEV was examimed. 
+
+```{r}
+
+data <- merge %>% 
+  group_by(townname,pm25_mass)%>% 
+  filter(!(fev %in% NA)) %>%
+  summarise_at(vars(fev),
+               list(mean))
+
+data %>% 
+  ggplot(mapping = aes(x = pm25_mass,y=fev))+
+  geom_point()+
+  geom_smooth(method = "lm")
+
+lm(fev~pm25_mass,data=data) %>% summary()
+```
+Looking at the average FEV values for each PM 2.5 concentration, the negative relationship between PM 2.5 and FEV seems more clear. After doing a linear regression test, it shows that the negative correlation between PM2.5 and FEV is statistically significant. 
