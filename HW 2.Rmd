@@ -113,3 +113,44 @@ merge %>% group_by(smoke_gas_exposure) %>%
     )
 ```
 
+# Looking at the Data 
+
+
+Q1: What is the association between BMI and FEV?
+Q2: What is the association between smoke and gas exposure and FEV? 
+Q3: What is the assoication between PM2.5 exposure and FEV? 
+
+Initial EDA Checklist:
+
+```{r}
+dim(merge)
+head(merge)
+tail(merge)
+summary(merge)
+```
+Overall, there does not seem to be any issues with the data. We will check the variables that we are analyzing more closely (BMI,FEV,PM2.5, and smoke and gas exposure)
+
+```{r}
+summary(merge$fev)
+summary(merge$pm25_mass)
+summary(merge$bmi)
+table(merge$smoke_gas_exposure)
+table(merge$obesity_level)
+```
+The key variables that we are analyzing all seem to have plausible values, and there does not seem to be an error in them. The NA's in the FEV category were all discarded when calculations were run. 
+
+## 1. Facet Plot, BMI vs FEV by "Townname"
+
+```{r, fig.height = 10, fig.width = 12}
+merge %>%
+  filter(!(townname %in% NA)) %>% 
+  ggplot(mapping = aes(x=bmi, y = fev, color = townname))+
+  geom_point()+
+  labs(title = "Association between BMI and FEV by town")+
+  facet_wrap(~townname, nrow = 3)+
+  geom_smooth(method = "lm")
+
+```
+
+## 2. Stacked Histograms of FEV by BMI and FEV by smoke/gas exposure
+
