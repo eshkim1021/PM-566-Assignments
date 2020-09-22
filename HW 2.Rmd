@@ -61,3 +61,19 @@ merge %>% count(obesity_level)
 The summary table shows that there are 89 NA's in the BMI variable, which accounts for the 89 NA variables that were counted in the total observations per BMI category. 
 
 Because the mean BMI of 18.5 and the median BMI of 17.48 are both in the Healthy category, a majority of the observations would be Healthy.
+
+# 3. Create Categorical Variable "Smoke_gas_exposure" 
+
+```{r}
+merge %>% group_by(smoke,gasstove) %>% count()
+merge <- merge %>% mutate(smoke_gas_exposure = case_when(smoke==0 & gasstove ==0 ~ "No Exposure",
+                                                         smoke==0 & gasstove==1 ~ "Gas Exposure",
+                                                         smoke==1 & gasstove ==0~ "Smoke Exposure",
+                                                         smoke==1 & gasstove ==1 ~ "Smoke and Gas Exposure")
+                          )
+merge %>% count(smoke_gas_exposure)
+```
+Four different categories were created indicating whether the participant was exposed to second-hand smoke, a gas stove, or both.
+
+
+

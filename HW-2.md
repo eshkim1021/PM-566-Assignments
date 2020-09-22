@@ -112,3 +112,42 @@ observations per BMI category.
 
 Because the mean BMI of 18.5 and the median BMI of 17.48 are both in the
 Healthy category, a majority of the observations would be Healthy.
+
+# 3\. Create Categorical Variable “Smoke\_gas\_exposure”
+
+``` r
+merge %>% group_by(smoke,gasstove) %>% count()
+```
+
+    ## # A tibble: 9 x 3
+    ## # Groups:   smoke, gasstove [9]
+    ##   smoke gasstove     n
+    ##   <int>    <int> <int>
+    ## 1     0        0   214
+    ## 2     0        1   739
+    ## 3     0       NA    17
+    ## 4     1        0    36
+    ## 5     1        1   151
+    ## 6     1       NA     3
+    ## 7    NA        0     5
+    ## 8    NA        1    22
+    ## 9    NA       NA    13
+
+``` r
+merge <- merge %>% mutate(smoke_gas_exposure = case_when(smoke==0 & gasstove ==0 ~ "No Exposure",
+                                                         smoke==0 & gasstove==1 ~ "Gas Exposure",
+                                                         smoke==1 & gasstove ==0~ "Smoke Exposure",
+                                                         smoke==1 & gasstove ==1 ~ "Smoke and Gas Exposure")
+                          )
+merge %>% count(smoke_gas_exposure)
+```
+
+    ##        smoke_gas_exposure   n
+    ## 1:           Gas Exposure 739
+    ## 2:            No Exposure 214
+    ## 3: Smoke and Gas Exposure 151
+    ## 4:         Smoke Exposure  36
+    ## 5:                   <NA>  60
+
+Four different categories were created indicating whether the
+participant was exposed to second-hand smoke, a gas stove, or both.
