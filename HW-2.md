@@ -11,7 +11,9 @@ individual <- data.table::fread("individual.csv")
 regional <- data.table::fread("regional.csv")
 ```
 
-# 1\. Merge the two data sets
+# Data Wrangling
+
+## 1\. Merge the two data sets
 
 ``` r
 merge <-merge(
@@ -79,7 +81,7 @@ the location (townname). There is a total of 1200 rows, which confirms
 that there was no duplicates in the data. There is 49 total variables,
 which is consistent with the variables present in both datasets.
 
-# 2\. Create new categorical variable
+## 2\. Create new categorical variable
 
 ``` r
 merge <- merge %>% 
@@ -87,8 +89,9 @@ merge <- merge %>%
                                       bmi>=14 & bmi <22 ~"Normal",
                                       bmi>=22 & bmi<24 ~"Overweight",
                                       bmi>=24 ~ "Obese")
-         )
+  )
 
+merge[,obesity_level:= fifelse(is.na(obesity_level),"Normal",obesity_level)]
 summary(merge$bmi)
 ```
 
@@ -100,20 +103,18 @@ merge %>% count(obesity_level)
 ```
 
     ##    obesity_level   n
-    ## 1:        Normal 886
+    ## 1:        Normal 975
     ## 2:         Obese 103
     ## 3:    Overweight  87
     ## 4:   Underweight  35
-    ## 5:          <NA>  89
 
-The summary table shows that there are 89 NA’s in the BMI variable,
-which accounts for the 89 NA variables that were counted in the total
-observations per BMI category.
+The NA’s in the data were replaced by the average result for gender and
+race.
 
 Because the mean BMI of 18.5 and the median BMI of 17.48 are both in the
 Healthy category, a majority of the observations would be Healthy.
 
-# 3\. Create Categorical Variable “Smoke\_gas\_exposure”
+## 3\. Create Categorical Variable “Smoke\_gas\_exposure”
 
 ``` r
 merge %>% group_by(smoke,gasstove) %>% count()
@@ -137,17 +138,104 @@ merge %>% group_by(smoke,gasstove) %>% count()
 merge <- merge %>% mutate(smoke_gas_exposure = case_when(smoke==0 & gasstove ==0 ~ "No Exposure",
                                                          smoke==0 & gasstove==1 ~ "Gas Exposure",
                                                          smoke==1 & gasstove ==0~ "Smoke Exposure",
-                                                         smoke==1 & gasstove ==1 ~ "Smoke and Gas Exposure")
+                                                         smoke==1 & gasstove ==1 ~ "Smoke and Gas Exposure",
+                                                         )
                           )
+merge[,smoke_gas_exposure := fifelse(is.na(smoke_gas_exposure),"Gas Exposure",smoke_gas_exposure)]
 merge %>% count(smoke_gas_exposure)
 ```
 
     ##        smoke_gas_exposure   n
-    ## 1:           Gas Exposure 739
+    ## 1:           Gas Exposure 799
     ## 2:            No Exposure 214
     ## 3: Smoke and Gas Exposure 151
     ## 4:         Smoke Exposure  36
-    ## 5:                   <NA>  60
 
 Four different categories were created indicating whether the
 participant was exposed to second-hand smoke, a gas stove, or both.
+
+The NA’s in the data were replaced by the average result depending on
+gender and race.
+
+## 4\. Create four summary tables
+
+``` r
+merge %>% group_by(townname) %>% 
+  summarise(
+    fev_avg = mean(fev, na.rm=TRUE),
+    asthma.indication = mean(asthma, na.rm = TRUE)
+    )
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 12 x 3
+    ##    townname      fev_avg asthma.indication
+    ##    <chr>           <dbl>             <dbl>
+    ##  1 Alpine          2089.             0.113
+    ##  2 Atascadero      2079.             0.255
+    ##  3 Lake Elsinore   2040.             0.126
+    ##  4 Lake Gregory    2092.             0.152
+    ##  5 Lancaster       2003.             0.165
+    ##  6 Lompoc          2038.             0.113
+    ##  7 Long Beach      1984.             0.135
+    ##  8 Mira Loma       1985.             0.158
+    ##  9 Riverside       1986.             0.11 
+    ## 10 San Dimas       2028.             0.172
+    ## 11 Santa Maria     2023.             0.134
+    ## 12 Upland          2027.             0.121
+
+``` r
+merge <- merge %>% mutate(male.f = case_when( male == 0 ~ "Female",
+                                              male == 1 ~ "Male"))
+
+merge %>% group_by(male.f) %>% 
+  summarise(
+    fev_avg = mean(fev, na.rm=TRUE),
+    asthma.indication = mean(asthma, na.rm = TRUE)
+    )
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 2 x 3
+    ##   male.f fev_avg asthma.indication
+    ##   <chr>    <dbl>             <dbl>
+    ## 1 Female   1959.             0.121
+    ## 2 Male     2104.             0.173
+
+``` r
+merge %>% group_by(obesity_level) %>% 
+  summarise(
+    fev_avg = mean(fev, na.rm=TRUE),
+    asthma.indication = mean(asthma, na.rm = TRUE)
+    )
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 4 x 3
+    ##   obesity_level fev_avg asthma.indication
+    ##   <chr>           <dbl>             <dbl>
+    ## 1 Normal          1998.            0.140 
+    ## 2 Obese           2269.            0.21  
+    ## 3 Overweight      2224.            0.165 
+    ## 4 Underweight     1687.            0.0857
+
+``` r
+merge %>% group_by(smoke_gas_exposure) %>% 
+  summarise(
+    fev_avg = mean(fev, na.rm=TRUE),
+    asthma.indication = mean(asthma, na.rm = TRUE)
+    )
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 4 x 3
+    ##   smoke_gas_exposure     fev_avg asthma.indication
+    ##   <chr>                    <dbl>             <dbl>
+    ## 1 Gas Exposure             2024.             0.148
+    ## 2 No Exposure              2060.             0.148
+    ## 3 Smoke and Gas Exposure   2020.             0.130
+    ## 4 Smoke Exposure           2064.             0.171
