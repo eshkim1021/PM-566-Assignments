@@ -154,3 +154,16 @@ merge %>%
 
 ## 2. Stacked Histograms of FEV by BMI and FEV by smoke/gas exposure
 
+```{r, fig.height =7,fig.width = 9}
+merge %>%
+  filter(!(townname %in% NA)) %>% 
+  ggplot()+
+  geom_histogram(mapping = aes(x=fev,fill=obesity_level))+
+  scale_fill_brewer(palette="Pastel1")
+
+merge %>% 
+  filter(!(townname %in% NA)) %>% 
+  ggplot()+
+  geom_histogram(mapping = aes(x = fev,fill=smoke_gas_exposure))+
+  scale_fill_brewer(palette = "Pastel2")
+```

@@ -532,3 +532,31 @@ merge %>%
 ![](HW-2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ## 2\. Stacked Histograms of FEV by BMI and FEV by smoke/gas exposure
+
+``` r
+merge %>%
+  filter(!(townname %in% NA)) %>% 
+  ggplot()+
+  geom_histogram(mapping = aes(x=fev,fill=obesity_level))+
+  scale_fill_brewer(palette="Pastel1")
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 95 rows containing non-finite values (stat_bin).
+
+![](HW-2_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
+merge %>% 
+  filter(!(townname %in% NA)) %>% 
+  ggplot()+
+  geom_histogram(mapping = aes(x = fev,fill=smoke_gas_exposure))+
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 95 rows containing non-finite values (stat_bin).
+
+![](HW-2_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
